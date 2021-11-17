@@ -1,11 +1,12 @@
-import React from 'react';
-import { CssBaseline,  Typography, Paper, Button, Table, TableHead, TableRow, TableCell, TableBody, TableContainer, Radio,  Checkbox } from '@material-ui/core';
-import { Container, Grid } from '@material-ui/core';
+import React, { useState } from 'react';
+import { Container, Grid, CssBaseline, Typography, Paper, Button, Table, TableHead, TableRow, TableCell, TableBody, Radio, Checkbox } from '@material-ui/core';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup'
 import TextField from '../../components/FormsUI/TextField';
 import DateTimePicker from '../../components/FormsUI/DateTimePicker';
 import useStyles from './styles';
+import Axios from 'axios';
+import { useHistory } from 'react-router-dom';
 
 const INITIAL_FORM_STATE = {
     firstName: '',
@@ -25,7 +26,7 @@ const FORM_VALIDATION = Yup.object().shape({
     lastName: Yup.string().required('Required'),
     phone: Yup.number().integer().typeError('Please enter a valid phone number').required('Required'),
     surveyDate: Yup.date().required('Required'),
-    age: Yup.number().integer().typeError('Please enter a valid age').required('Required'),
+    age: Yup.number().integer().min(5).max(120).typeError('Please enter a valid age').required('Required'),
     favoriteFood: Yup.array().min(1).required('Choose atleast one favorite food'),
     eatOut: Yup.string().required("Eat out option is required"),
     movies: Yup.string().required("Movies option is required"),
@@ -37,12 +38,51 @@ const FORM_VALIDATION = Yup.object().shape({
 const SurveyForm = () => {
     const classes = useStyles();
 
-    const handleSubmit = (values, props) => {
+    const [error, setError] = useState('');
+    const [message, setMessage] = useState('');
+    const [loading, setLoading] = useState(false);
+    const history = useHistory();
+
+    const handleSubmit = async(values, props) => {
         console.log(values);
+
+        setTimeout(() => {
+            props.resetForm();
+            props.setSubmitting(false);
+        }, 2000);
+        
+        try {
+            setError('')
+            setLoading(true)
+            await Axios.post("http://localhost:3001/survey", {
+                firstName: values.firstName,
+                lastName: values.lastName,
+                phone: values.phone,
+                surveyDate: values.surveyDate,
+                age: values.age,
+                favoriteFood: values.favoriteFood,
+                eatOut: values.eatOut,
+                movies: values.movies,
+                television: values.television,
+                listenToRadio: values.listenToRadio
+            }).then((response) => {
+                setMessage('Survey Submitted 😁');
+                alert('Survey Submitted 😁');
+            });
+            
+            history.push('/')
+
+        } catch (error) {
+            setMessage('');
+            setError('Failed to Submit survey');
+        } 
+        
+        setLoading(false)
     }
 
     return (
-        <Grid container>
+        <Container  className={classes.container} sx={{ py: 4 }} maxWidth="m">
+        <Grid container spacing={2}>
             <CssBaseline />
             <Grid item xs={12}>
                 <Container maxWidth="md">
@@ -50,6 +90,10 @@ const SurveyForm = () => {
                     Take Our Survey
                 </Typography>
                 <Paper className={classes.paper} elevation={10}>
+                    
+                    {error && <Typography color="error" sx={{ my: 1, width:'100%' }} >{error}</Typography>}
+                    {message && <Typography color="info" sx={{ my: 1, width:'100%' }} >{message}</Typography>}
+
                     <div className={classes.formWrapper}>
                         <Formik 
                             initialValues={{
@@ -57,13 +101,10 @@ const SurveyForm = () => {
                             }}
                             validationSchema={FORM_VALIDATION}
                             onSubmit={handleSubmit}
-                            /* onSubmit={values => {
-                                console.log(values)
-                            }} */
                         >
                             {(props) => (
                                 <Form>
-                                    <Grid container spacing={2}>
+                                    <Grid container spacing={3}>
                                         <Grid item xs={12}>
                                             <Typography variant="h6">
                                                 Personal details
@@ -172,9 +213,8 @@ const SurveyForm = () => {
                                         </Grid>
 
                                         <Grid item xs={12}>
-                                            <TableContainer component={Paper} sx={{ width: '100%', overflow: 'hidden' }} elevation={5}>
-                                                {/* <Table sx={{ minWidth: 650 }} aria-label="simple table"> */}
-                                                <Table stickyHeader aria-label="sticky table" className={classes.table}>
+                                            <Paper elevation={4}>
+                                                <Table aria-label="simple table" className={classes.table}>
                                                     <TableHead>
                                                         <TableRow>
                                                             <TableCell>{}</TableCell>
@@ -280,7 +320,7 @@ const SurveyForm = () => {
                                                         </TableRow>
                                                     </TableBody>
                                                 </Table>
-                                            </TableContainer>
+                                            </Paper>    
 
                                     
                                             {/*  <div>Eat Out: {props.values.eatOut}</div>
@@ -310,9 +350,10 @@ const SurveyForm = () => {
                                                 color="primary"
                                                 size="large"
                                                 fullWidth
-                                                type="submit" 
+                                                type="submit"
+                                                disabled={loading} 
                                             >
-                                                Submit form
+                                                {loading ? "Loading..." : "Submit" } 
                                             </Button>
                                         </Grid>
                                         
@@ -327,6 +368,7 @@ const SurveyForm = () => {
             </Grid>
 
         </Grid>
+        </Container>
     )
 }
 
