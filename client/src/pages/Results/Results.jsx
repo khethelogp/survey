@@ -12,7 +12,7 @@ const Results = () => {
     const [results, setResults] = useState([]);
 
     useEffect(() => {
-        Axios.get("http://localhost:3001/results")
+        Axios.get("https://lifestyle-survey.herokuapp.com/results")
         .then((response) => {
             setResults(response.data);
         })

@@ -5,15 +5,19 @@ const SurveyModel = require("./models/Surveys");
 const cors = require("cors");
 require("dotenv").config();
 
-let port = process.env.PORT;
+const port = process.env.PORT;
 
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect(process.env.MONGO_URI);
+mongoose.connect("mongodb+srv://khethelogp:Rockstar101@cluster0.vecxq.mongodb.net/merntutorial?retryWrites=true&w=majority");
 
-app.get("/results", (req, res) => {
-    SurveyModel.find({}, (err, result) => {
+app.get("/", (req, res) => {
+    res.send("Hello World");
+});
+
+app.get("/results", async(req, res) => {
+    await SurveyModel.find({}, (err, result) => {
         if(err){
             res.json(err);
         }else {
@@ -31,6 +35,6 @@ app.post("/survey", async (req, res) => {
     res.json(survey);
 })
 
-app.listen(port, () => {
+app.listen(port || 5000, () => {
     console.log(`server runnig on port ${port}`);
 });

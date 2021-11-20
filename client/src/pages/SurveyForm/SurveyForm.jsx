@@ -54,7 +54,7 @@ const SurveyForm = () => {
         try {
             setError('')
             setLoading(true)
-            await Axios.post("http://localhost:3001/survey", {
+            await Axios.post("https://lifestyle-survey.herokuapp.com/survey", {
                 firstName: values.firstName,
                 lastName: values.lastName,
                 phone: values.phone,
